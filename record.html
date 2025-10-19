@@ -26,7 +26,16 @@
   <div id="records">載入中...</div>
 
   <script>
-    const scriptURL = '你的AppsScript部署URL'; // 將此處替換成 Apps Script 網頁應用程式 URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9M6OuLyRjnf2E1yOxOeMdi2P3SBeyl9JRk6PzjYBR_17iakc6fkwVOa69W18ya8ur7Q/exec';
+
+    // 格式化日期 yyyy/mm/dd
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}/${mm}/${dd}`;
+    }
 
     // 讀取歷史紀錄
     function loadRecords() {
@@ -42,8 +51,7 @@
             return;
           }
           data.forEach(row => {
-            const date = new Date(row.date).toLocaleDateString();
-            container.innerHTML += `<p>${date} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，作業：${row.coachHomework} 次</p>`;
+            container.innerHTML += `<p>${formatDate(row.date)} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，作業：${row.coachHomework} 次</p>`;
           });
         })
         .catch(err => {
@@ -81,5 +89,6 @@
   </script>
 </body>
 </html>
+
 
 
