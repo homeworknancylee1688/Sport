@@ -1,17 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Workout Record</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; }
+    label { display: block; margin: 0.5rem 0; }
+    input, button { padding: 0.4rem; font-size: 1rem; }
+    button { margin-top: 1rem; }
+    #records p { background: #f0f0f0; padding: 0.6rem; border-radius: 4px; }
+  </style>
 </head>
 <body>
   <h1>Workout Record</h1>
 
   <form id="recordForm">
-    <label>Date: <input type="date" name="date" required></label><br />
-    <label>Running Time (minutes): <input type="number" name="runningTime" required></label><br />
-    <label>Walk Time (minutes): <input type="number" name="walkTime" required></label><br />
-    <label>Coach Homework (times): <input type="number" name="coachHomework" required></label><br />
+    <label>Date: <input type="date" name="date" required></label>
+    <label>Running Time (minutes): <input type="number" name="runningTime" required></label>
+    <label>Walk Time (minutes): <input type="number" name="walkTime" required></label>
+    <label>Coach Homework (times): <input type="number" name="coachHomework" required></label>
     <button type="submit">Submit</button>
   </form>
 
@@ -19,26 +26,40 @@
   <div id="records">載入中...</div>
 
   <script>
+    // 請把這裡換成你的 Google Apps Script Web App 部署網址
+    const scriptURL = 'https://script.google.com/macros/s/YOUR_DEPLOY_ID/exec';
+
     // 載入紀錄
-    function loadRecords() {
-      google.script.run.withSuccessHandler(function(data) {
-        const container = document.getElementById('records');
+    async function loadRecords() {
+      const container = document.getElementById('records');
+      container.textContent = '載入中...';
+
+      try {
+        const response = await fetch(scriptURL);
+        if (!response.ok) throw new Error('伺服器錯誤: ' + response.status);
+
+        const data = await response.json();
         container.innerHTML = '';
 
         if (!data || data.length === 0) {
-          container.innerText = "目前沒有紀錄。";
+          container.textContent = '目前沒有紀錄。';
           return;
         }
 
         data.forEach(row => {
           const formattedDate = new Date(row.date).toLocaleDateString();
-          container.innerHTML += `<p>${formattedDate} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，教練作業：${row.coachHomework} 次</p>`;
+          const p = document.createElement('p');
+          p.textContent = `${formattedDate} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，作業：${row.coachHomework} 次`;
+          container.appendChild(p);
         });
-      }).getRecords();
+      } catch (error) {
+        container.textContent = '無法載入紀錄。';
+        console.error(error);
+      }
     }
 
     // 表單送出事件
-    document.getElementById('recordForm').addEventListener('submit', function(e) {
+    document.getElementById('recordForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
       const formData = new FormData(this);
@@ -49,19 +70,26 @@
         coachHomework: Number(formData.get('coachHomework'))
       };
 
-      google.script.run
-        .withSuccessHandler(function() {
-          alert("新增成功！");
-          document.getElementById('recordForm').reset();
-          loadRecords();
-        })
-        .withFailureHandler(function(error) {
-          alert("發生錯誤：" + error.message);
-        })
-        .addRecord(data);
+      try {
+        const response = await fetch(scriptURL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const text = await response.text();
+        if (!response.ok) throw new Error(text || '新增失敗');
+
+        alert('新增成功！');
+        this.reset();
+        loadRecords();
+      } catch (error) {
+        alert('發生錯誤：' + error.message);
+      }
     });
 
-    window.onload = loadRecords;
+    // 頁面載入時先取得紀錄
+    loadRecords();
   </script>
 </body>
 </html>
