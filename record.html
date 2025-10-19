@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Workout Record</title>
 </head>
 <body>
@@ -19,7 +19,23 @@
   <div id="records">載入中...</div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/你的部署ID/exec';  // 請改成你自己的部署URL
+    // 載入紀錄
+    function loadRecords() {
+      google.script.run.withSuccessHandler(function(data) {
+        const container = document.getElementById('records');
+        container.innerHTML = '';
+
+        if (!data || data.length === 0) {
+          container.innerText = "目前沒有紀錄。";
+          return;
+        }
+
+        data.forEach(row => {
+          const formattedDate = new Date(row.date).toLocaleDateString();
+          container.innerHTML += `<p>${formattedDate} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，教練作業：${row.coachHomework} 次</p>`;
+        });
+      }).getRecords();
+    }
 
     // 表單送出事件
     document.getElementById('recordForm').addEventListener('submit', function(e) {
@@ -33,46 +49,19 @@
         coachHomework: Number(formData.get('coachHomework'))
       };
 
-      fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(response => response.text())
-      .then(msg => {
-        alert("Record added!");
-        this.reset();
-        loadRecords(); // 送出後重新載入紀錄
-      })
-      .catch(err => alert("Error: " + err.message));
+      google.script.run
+        .withSuccessHandler(function() {
+          alert("新增成功！");
+          document.getElementById('recordForm').reset();
+          loadRecords();
+        })
+        .withFailureHandler(function(error) {
+          alert("發生錯誤：" + error.message);
+        })
+        .addRecord(data);
     });
 
-    // 載入並顯示紀錄
-    function loadRecords() {
-      fetch(scriptURL)
-        .then(res => res.json())
-        .then(data => {
-          const container = document.getElementById('records');
-          container.innerHTML = '';
-
-          if (data.length === 0) {
-            container.innerText = "目前沒有紀錄。";
-            return;
-          }
-
-          data.forEach(row => {
-            const formattedDate = new Date(row.date).toLocaleDateString();
-            container.innerHTML += `<p>${formattedDate} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，教練作業：${row.coachHomework} 次</p>`;
-          });
-        })
-        .catch(err => {
-          document.getElementById('records').innerText = "無法載入紀錄。";
-          console.error(err);
-        });
-    }
-
-    // 頁面載入時先取得紀錄
-    loadRecords();
+    window.onload = loadRecords;
   </script>
 </body>
 </html>
