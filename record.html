@@ -26,32 +26,33 @@
   <div id="records">載入中...</div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9M6OuLyRjnf2E1yOxOeMdi2P3SBeyl9JRk6PzjYBR_17iakc6fkwVOa69W18ya8ur7Q/exec'; // 替換成你的 Apps Script URL
+    const scriptURL = '你的AppsScript部署URL'; // 將此處替換成 Apps Script 網頁應用程式 URL
 
+    // 讀取歷史紀錄
     function loadRecords() {
       const container = document.getElementById('records');
       container.textContent = '載入中...';
 
-      const callbackName = 'handleRecords';
-      window[callbackName] = function(data) {
-        container.innerHTML = '';
-        if (!data || data.length === 0) {
-          container.textContent = '目前沒有紀錄。';
-          return;
-        }
-        data.forEach(row => {
-          const date = new Date(row.date).toLocaleDateString();
-          container.innerHTML += `<p>${date} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，作業：${row.coachHomework} 次</p>`;
+      fetch(scriptURL)
+        .then(res => res.json())
+        .then(data => {
+          container.innerHTML = '';
+          if (!data || data.length === 0) {
+            container.textContent = '目前沒有紀錄。';
+            return;
+          }
+          data.forEach(row => {
+            const date = new Date(row.date).toLocaleDateString();
+            container.innerHTML += `<p>${date} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，作業：${row.coachHomework} 次</p>`;
+          });
+        })
+        .catch(err => {
+          container.textContent = '載入失敗';
+          console.error(err);
         });
-        document.head.removeChild(script);
-        delete window[callbackName];
-      };
-
-      const script = document.createElement('script');
-      script.src = scriptURL + '?callback=' + callbackName;
-      document.head.appendChild(script);
     }
 
+    // 新增紀錄
     document.getElementById('recordForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
@@ -71,7 +72,7 @@
       .then(msg => {
         alert(msg);
         this.reset();
-        loadRecords();
+        loadRecords(); // 新增後刷新列表
       })
       .catch(err => alert('發生錯誤: ' + err));
     });
@@ -80,4 +81,5 @@
   </script>
 </body>
 </html>
+
 
