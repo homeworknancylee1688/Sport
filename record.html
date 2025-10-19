@@ -1,45 +1,48 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <title>Workout Record - GitHub Pages 讀取</title>
+  <meta charset="UTF-8">
+  <title>Workout Record</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; }
+    label { display: block; margin: 0.5rem 0; }
+    input, button { padding: 0.4rem; font-size: 1rem; }
+    button { margin-top: 1rem; }
     #records p { background: #f0f0f0; padding: 0.6rem; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <h1>Workout Record (GitHub Pages 讀取)</h1>
+  <h1>Workout Record</h1>
 
-  <h2>History</h2>
+  <form id="recordForm">
+    <label>日期: <input type="date" name="date" required></label>
+    <label>跑步時間 (分鐘): <input type="number" name="runningTime" required></label>
+    <label>走路時間 (分鐘): <input type="number" name="walkTime" required></label>
+    <label>教練作業次數: <input type="number" name="coachHomework" required></label>
+    <button type="submit">新增紀錄</button>
+  </form>
+
+  <h2>歷史紀錄</h2>
   <div id="records">載入中...</div>
 
   <script>
-    // 你的 Google Apps Script Web App URL（請改成你自己的部署網址）
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9M6OuLyRjnf2E1yOxOeMdi2P3SBeyl9JRk6PzjYBR_17iakc6fkwVOa69W18ya8ur7Q/exec';
+    const scriptURL = 'https://script.google.com/macros/s/YOUR_DEPLOY_URL/exec'; // 替換成你的 Apps Script URL
 
     function loadRecords() {
       const container = document.getElementById('records');
       container.textContent = '載入中...';
 
       const callbackName = 'handleRecords';
-
       window[callbackName] = function(data) {
         container.innerHTML = '';
-
         if (!data || data.length === 0) {
           container.textContent = '目前沒有紀錄。';
           return;
         }
-
         data.forEach(row => {
-          const formattedDate = new Date(row.date).toLocaleDateString();
-          const p = document.createElement('p');
-          p.textContent = `${formattedDate} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，作業：${row.coachHomework} 次`;
-          container.appendChild(p);
+          const date = new Date(row.date).toLocaleDateString();
+          container.innerHTML += `<p>${date} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，作業：${row.coachHomework} 次</p>`;
         });
-
-        // 移除script標籤與callback，避免記憶體洩漏
         document.head.removeChild(script);
         delete window[callbackName];
       };
@@ -49,7 +52,32 @@
       document.head.appendChild(script);
     }
 
-    loadRecords();
+    document.getElementById('recordForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const data = {
+        date: formData.get('date'),
+        runningTime: Number(formData.get('runningTime')),
+        walkTime: Number(formData.get('walkTime')),
+        coachHomework: Number(formData.get('coachHomework'))
+      };
+
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      })
+      .then(res => res.text())
+      .then(msg => {
+        alert(msg);
+        this.reset();
+        loadRecords();
+      })
+      .catch(err => alert('發生錯誤: ' + err));
+    });
+
+    window.onload = loadRecords;
   </script>
 </body>
 </html>
+
