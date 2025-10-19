@@ -19,7 +19,7 @@
   <div id="records">載入中...</div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9M6OuLyRjnf2E1yOxOeMdi2P3SBeyl9JRk6PzjYBR_17iakc6fkwVOa69W18ya8ur7Q/exec';
+    const scriptURL = 'https://script.google.com/macros/s/你的部署ID/exec';  // 請改成你自己的部署URL
 
     // 表單送出事件
     document.getElementById('recordForm').addEventListener('submit', function(e) {
@@ -61,7 +61,6 @@
           }
 
           data.forEach(row => {
-            // 格式化日期
             const formattedDate = new Date(row.date).toLocaleDateString();
             container.innerHTML += `<p>${formattedDate} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，教練作業：${row.coachHomework} 次</p>`;
           });
