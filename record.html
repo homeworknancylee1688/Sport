@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Workout Record</title>
 </head>
 <body>
   <h1>Workout Record</h1>
 
   <form id="recordForm">
-    <label>Date: <input type="date" name="date" required></label><br>
-    <label>Running Time (minutes): <input type="number" name="runningTime" required></label><br>
-    <label>Walk Time (minutes): <input type="number" name="walkTime" required></label><br>
-    <label>Coach Homework (times): <input type="number" name="coachHomework" required></label><br>
+    <label>Date: <input type="date" name="date" required></label><br />
+    <label>Running Time (minutes): <input type="number" name="runningTime" required></label><br />
+    <label>Walk Time (minutes): <input type="number" name="walkTime" required></label><br />
+    <label>Coach Homework (times): <input type="number" name="coachHomework" required></label><br />
     <button type="submit">Submit</button>
   </form>
 
@@ -19,7 +19,7 @@
   <div id="records"></div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9M6OuLyRjnf2E1yOxOeMdi2P3SBeyl9JRk6PzjYBR_17iakc6fkwVOa69W18ya8ur7Q/exec'; // <--- 替換成你的 Google Apps Script 網址
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9M6OuLyRjnf2E1yOxOeMdi2P3SBeyl9JRk6PzjYBR_17iakc6fkwVOa69W18ya8ur7Q/exec'; // 請替換成你的網址
 
     document.getElementById('recordForm').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -27,9 +27,9 @@
       const formData = new FormData(this);
       const data = {
         date: formData.get('date'),
-        runningTime: formData.get('runningTime'),
-        walkTime: formData.get('walkTime'),
-        coachHomework: formData.get('coachHomework')
+        runningTime: Number(formData.get('runningTime')),
+        walkTime: Number(formData.get('walkTime')),
+        coachHomework: Number(formData.get('coachHomework'))
       };
 
       fetch(scriptURL, {
@@ -42,7 +42,8 @@
         alert("Record added!");
         this.reset();
         loadRecords(); // 更新紀錄
-      });
+      })
+      .catch(err => alert("Error: " + err.message));
     });
 
     function loadRecords() {
@@ -51,9 +52,15 @@
         .then(data => {
           const container = document.getElementById('records');
           container.innerHTML = '';
+
           data.forEach(row => {
-            container.innerHTML += `<p>${row.date} - Running: ${row.runningTime} mins, Walk: ${row.walkTime} mins, Homework: ${row.coachHomework} times</p>`;
+            const formattedDate = new Date(row.date).toLocaleDateString();
+            container.innerHTML += `<p>${formattedDate} - Running: ${row.runningTime} mins, Walk: ${row.walkTime} mins, Homework: ${row.coachHomework} times</p>`;
           });
+        })
+        .catch(err => {
+          document.getElementById('records').innerText = "Failed to load records.";
+          console.error(err);
         });
     }
 
@@ -61,3 +68,4 @@
   </script>
 </body>
 </html>
+
