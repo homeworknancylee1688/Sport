@@ -16,11 +16,12 @@
   </form>
 
   <h2>History</h2>
-  <div id="records"></div>
+  <div id="records">載入中...</div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9M6OuLyRjnf2E1yOxOeMdi2P3SBeyl9JRk6PzjYBR_17iakc6fkwVOa69W18ya8ur7Q/exec'; // 請替換成你的網址
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9M6OuLyRjnf2E1yOxOeMdi2P3SBeyl9JRk6PzjYBR_17iakc6fkwVOa69W18ya8ur7Q/exec';
 
+    // 表單送出事件
     document.getElementById('recordForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
@@ -41,11 +42,12 @@
       .then(msg => {
         alert("Record added!");
         this.reset();
-        loadRecords(); // 更新紀錄
+        loadRecords(); // 送出後重新載入紀錄
       })
       .catch(err => alert("Error: " + err.message));
     });
 
+    // 載入並顯示紀錄
     function loadRecords() {
       fetch(scriptURL)
         .then(res => res.json())
@@ -53,19 +55,25 @@
           const container = document.getElementById('records');
           container.innerHTML = '';
 
+          if (data.length === 0) {
+            container.innerText = "目前沒有紀錄。";
+            return;
+          }
+
           data.forEach(row => {
+            // 格式化日期
             const formattedDate = new Date(row.date).toLocaleDateString();
-            container.innerHTML += `<p>${formattedDate} - Running: ${row.runningTime} mins, Walk: ${row.walkTime} mins, Homework: ${row.coachHomework} times</p>`;
+            container.innerHTML += `<p>${formattedDate} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，教練作業：${row.coachHomework} 次</p>`;
           });
         })
         .catch(err => {
-          document.getElementById('records').innerText = "Failed to load records.";
+          document.getElementById('records').innerText = "無法載入紀錄。";
           console.error(err);
         });
     }
 
-    loadRecords(); // 頁面載入時取得資料
+    // 頁面載入時先取得紀錄
+    loadRecords();
   </script>
 </body>
 </html>
-
