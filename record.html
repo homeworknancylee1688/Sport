@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>Workout Record</title>
+  <title>Workout Record - GitHub Pages 讀取</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; }
     label { display: block; margin: 0.5rem 0; }
@@ -12,33 +12,22 @@
   </style>
 </head>
 <body>
-  <h1>Workout Record</h1>
-
-  <form id="recordForm">
-    <label>Date: <input type="date" name="date" required></label>
-    <label>Running Time (minutes): <input type="number" name="runningTime" required></label>
-    <label>Walk Time (minutes): <input type="number" name="walkTime" required></label>
-    <label>Coach Homework (times): <input type="number" name="coachHomework" required></label>
-    <button type="submit">Submit</button>
-  </form>
+  <h1>Workout Record (GitHub Pages 讀取)</h1>
 
   <h2>History</h2>
   <div id="records">載入中...</div>
 
   <script>
-    // 請把這裡換成你的 Google Apps Script Web App 部署網址
+    // 你的 Google Apps Script Web App URL（記得改成你的網址）
     const scriptURL = 'https://script.google.com/macros/s/AKfycbx9M6OuLyRjnf2E1yOxOeMdi2P3SBeyl9JRk6PzjYBR_17iakc6fkwVOa69W18ya8ur7Q/exec';
 
-    // 載入紀錄
-    async function loadRecords() {
+    function loadRecords() {
       const container = document.getElementById('records');
       container.textContent = '載入中...';
 
-      try {
-        const response = await fetch(scriptURL);
-        if (!response.ok) throw new Error('伺服器錯誤: ' + response.status);
+      const callbackName = 'handleRecords';
 
-        const data = await response.json();
+      window[callbackName] = function(data) {
         container.innerHTML = '';
 
         if (!data || data.length === 0) {
@@ -52,45 +41,20 @@
           p.textContent = `${formattedDate} - 跑步：${row.runningTime} 分鐘，走路：${row.walkTime} 分鐘，作業：${row.coachHomework} 次`;
           container.appendChild(p);
         });
-      } catch (error) {
-        container.textContent = '無法載入紀錄。';
-        console.error(error);
-      }
-    }
 
-    // 表單送出事件
-    document.getElementById('recordForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-      const formData = new FormData(this);
-      const data = {
-        date: formData.get('date'),
-        runningTime: Number(formData.get('runningTime')),
-        walkTime: Number(formData.get('walkTime')),
-        coachHomework: Number(formData.get('coachHomework'))
+        // 移除script標籤與callback，避免記憶體洩漏
+        document.head.removeChild(script);
+        delete window[callbackName];
       };
 
-      try {
-        const response = await fetch(scriptURL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
+      const script = document.createElement('script');
+      script.src = scriptURL + '?callback=' + callbackName;
+      document.head.appendChild(script);
+    }
 
-        const text = await response.text();
-        if (!response.ok) throw new Error(text || '新增失敗');
-
-        alert('新增成功！');
-        this.reset();
-        loadRecords();
-      } catch (error) {
-        alert('發生錯誤：' + error.message);
-      }
-    });
-
-    // 頁面載入時先取得紀錄
     loadRecords();
   </script>
 </body>
 </html>
+
 
